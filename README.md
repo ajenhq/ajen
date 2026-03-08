@@ -4,7 +4,7 @@
 
 # Ajen
 
-**Ajna + Genesis — the third eye that generates entire companies from a single idea.**
+**Ajna + Genesis**
 
 Describe a startup. Watch AI employees build it. Ship in minutes, not months.
 
@@ -28,13 +28,45 @@ You sit on the board. The AI team does the rest.
 
 ---
 
+## How It Works
+
+**Idea → CEO Plan → Board Approval → Team Execution → Product**
+
+1. **Describe your startup idea**
+   Tell Ajen what you want to build.
+
+2. **The AI CEO creates a plan**
+   A structured roadmap with milestones, architecture, and tasks.
+
+3. **You approve as the board**
+   Nothing starts until you approve the plan.
+
+4. **AI employees execute**
+   Developers, designers, marketers, and operators begin working.
+
+5. **Watch it happen live**
+   Every decision, tool call, and update streams to the dashboard in real time.
+
+<p align="center">
+  <a href="https://www.ajen.dev">
+  <img src="./assets/dashboard.png" alt="Ajen Dashboard showing AI employees building a startup" width="900"/>
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://www.ajen.dev"><strong>Open Dashboard →</strong></a>
+</p>
+
+
+---
+
 ## Quick Start
 
 ```bash
 # Clone & setup
 git clone https://github.com/ajenhq/ajen.git && cd ajen
 cp .env.example .env
-# Add your ANTHROPIC_API_KEY to .env
+# Configure your API keys in .env
 
 # Run
 cargo run --release
@@ -56,72 +88,7 @@ The CLI auto-installs `cloudflared` if needed, opens a tunnel, and prints everyt
   └─────────────────────────────────────────────────┘
 ```
 
-Your browser opens the connect link automatically. The [ajen.dev](https://www.ajen.dev) dashboard connects to your local CLI through the tunnel — no port forwarding, no configuration.
-
----
-
-## How It Works
-
-```
-  DESCRIBE            PLAN               APPROVE            BUILD
-  ─────────          ──────             ─────────          ───────
-  POST /companies    CEO analyzes       POST /approve      Director spawns
-  { "description":   the idea and       to greenlight      team and executes
-    "A marketplace   returns a plan     the plan           milestones
-    for cameras" }   with milestones                       sequentially
-```
-
-### 1. Create a company
-
-```bash
-curl -X POST http://localhost:3000/api/companies \
-  -H "Authorization: Bearer ak_7f3a...b2c1" \
-  -H "Content-Type: application/json" \
-  -d '{"description": "A vintage camera marketplace with auction support"}'
-```
-
-The CEO employee starts planning in the background. You get a `company_id` back immediately.
-
-### 2. Check status
-
-```bash
-curl http://localhost:3000/api/companies/{id} \
-  -H "Authorization: Bearer ak_7f3a...b2c1"
-```
-
-Returns the company status, plan (once ready), team members, task progress, and cost.
-
-### 3. Approve the plan
-
-```bash
-curl -X POST http://localhost:3000/api/companies/{id}/approve \
-  -H "Authorization: Bearer ak_7f3a...b2c1"
-```
-
-The Director spawns the team — CTO, developers, designer, content writer — and assigns tasks from each milestone. Employees work sequentially through the plan using the ReAct loop.
-
-### 4. Watch it happen
-
-```
-wss://abc123.trycloudflare.com/api/companies/{id}/stream?token=ak_7f3a...b2c1
-```
-
-Every employee action, tool call, LLM response, and cost is streamed as typed events over WebSocket.
-
----
-
-## API
-
-All endpoints require `Authorization: Bearer <secret>` except `/health`.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Liveness check (no auth) |
-| `POST` | `/api/companies` | Create a company from a description |
-| `GET` | `/api/companies` | List all companies |
-| `GET` | `/api/companies/{id}` | Get company status, plan, and progress |
-| `POST` | `/api/companies/{id}/approve` | Approve plan and start execution |
-| `GET` | `/api/companies/{id}/stream` | WebSocket event stream (`?token=`) |
+Open your browser and connect using the link. The [ajen.dev](https://www.ajen.dev) dashboard connects to your local CLI through the tunnel — no port forwarding, no configuration.
 
 ---
 
@@ -150,7 +117,7 @@ Board (you) → CEO → CTO / CMO / COO → Developers, designers, writers. The 
 <td width="33%" valign="top">
 
 ### Plug-and-Play Employees
-Each employee is a YAML manifest + persona file. 14 built-in roles. Swap roles, add custom employees, share them with the community.
+Each employee is a YAML manifest + persona file. Swap roles, add custom employees, share them with the community.
 
 </td>
 <td width="33%" valign="top">
@@ -185,42 +152,6 @@ Per-employee and per-company cost tracking. Every LLM call records token usage a
 ---
 
 ## Architecture
-
-```mermaid
-graph TB
-    subgraph "Ajen CLI (single Rust binary)"
-        Server["Axum HTTP / WebSocket"]
-        Director["Director"]
-        Engine["Employee Runtime (ReAct)"]
-        Tunnel["Cloudflare Tunnel"]
-    end
-
-    subgraph "AI Employees (async tasks)"
-        E1["CEO — plans the company"]
-        E2["CTO — defines architecture"]
-        E3["Devs — write code"]
-        E4["Designer / Writer"]
-    end
-
-    subgraph Infrastructure
-        Store["Company Store"]
-        Events["Event Bus (broadcast)"]
-        Comms["Comms Bus (mpsc)"]
-        Budget["Budget Tracker"]
-    end
-
-    Dashboard["ajen.dev Dashboard"] -->|tunnel| Server
-    Server --> Director
-    Director -->|start_company| E1
-    Director -->|approve → spawn team| E2 & E3 & E4
-    E1 & E2 & E3 & E4 --> Engine
-
-    Engine --> Events
-    Engine --> Comms
-    Engine --> Budget
-    Events --> Server
-    Director --> Store
-```
 
 **Single binary** — Director, engine, API server, tunnel, and WebSocket all run in one Rust process on Tokio. The [ajen.dev](https://www.ajen.dev) dashboard connects to your local CLI via a Cloudflare tunnel — your code and API keys never leave your machine.
 
@@ -257,7 +188,7 @@ spec:
     maxConcurrentTasks: 3
 ```
 
-14 built-in roles: `ceo`, `cto`, `cmo`, `coo`, `fullstack_dev`, `frontend_dev`, `backend_dev`, `content_writer`, `designer`, `seo_specialist`, `devops`, `qa_engineer`, `social_media`, `data_analyst`. Roles are open strings — create any role you want.
+built-in roles: `ceo`, `cto`, `cmo`, `coo`, `fullstack_dev`, `frontend_dev`, `backend_dev`, `content_writer`, `designer`, `seo_specialist`, `devops`, `qa_engineer`, `social_media`, `data_analyst`. Roles are open strings — create any role you want.
 
 ---
 
@@ -305,7 +236,6 @@ ajen/
 - [ ] Parallel Execution — concurrent tasks within milestones
 - [ ] Container Isolation — sandboxed employee environments
 - [ ] Plugin System — community employee manifests + custom tools
-- [ ] ajen.dev Dashboard — real-time UI with Supabase auth
 
 ---
 
@@ -330,7 +260,7 @@ MIT — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-Built with Rust, caffeine, and mass quantities of AI.
+Built with Rust, caffeine, and a company of AI employees.
 
 **[Star this repo](https://github.com/ajenhq/ajen)** if you think AI should build companies, not just code.
 
